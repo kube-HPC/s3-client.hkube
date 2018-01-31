@@ -4,7 +4,9 @@
   "description": "s3 client",
   "main": "index.js",
   "scripts": {
-    "test": "mocha tests --colors --recursive"
+    "test": "mocha tests --colors --recursive --exit",
+    "test-travis": "./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- -R spec tests --exit",
+    "build": "npm publish"
   },
   "keywords": [
     "s3"
@@ -13,7 +15,6 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.188.0",
-    "uniqid": "^4.1.1",
     "uuid": "^3.2.1"
   },
   "devDependencies": {
