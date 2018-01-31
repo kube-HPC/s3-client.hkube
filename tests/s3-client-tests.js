@@ -54,7 +54,7 @@ describe('s3-client', () => {
         it('should failed if bucket not exists', (done) => {
             S3Client.get(uniqid(), uniqid()).catch((err) => {
                 expect(err.statusCode).to.equal(404);
-                expect(err.name).to.equal('NoSuchKey');
+                expect(err.name).to.equal('NoSuchBucket');
                 done();
             });
         }).timeout(5000);
