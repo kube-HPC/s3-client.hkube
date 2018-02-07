@@ -26,8 +26,20 @@ describe('s3-client', () => {
         done();
     });
     describe('put', () => {
-        it('should throw error on invalid bucket name', (done) => {
-            S3Client._isBucketExists('-er').catch((error) => {
+        it('should throw error on invalid bucket name (empty)', (done) => {
+            S3Client.put({ Bucket: '', Key: uniqid(), Body: mock }).catch((error) => {
+                expect(error).to.be.an('error');
+                done();
+            });
+        });
+        it('should throw error on invalid bucket name (not string)', (done) => {
+            S3Client.put({ Bucket: 3423, Key: uniqid(), Body: mock }).catch((error) => {
+                expect(error).to.be.an('error');
+                done();
+            });
+        });
+        it('should throw error on invalid bucket name (null)', (done) => {
+            S3Client.put({ Bucket: null, Key: uniqid(), Body: mock }).catch((error) => {
                 expect(error).to.be.an('error');
                 done();
             });
