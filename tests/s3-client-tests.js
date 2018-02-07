@@ -27,7 +27,7 @@ describe('s3-client', () => {
     });
     describe('put', () => {
         it('should throw error on invalid bucket name (empty)', (done) => {
-            S3Client.put({ Bucket: '', Key: uniqid(), Body: mock }).catch((error) => {
+            S3Client.put({ Bucket: ' ', Key: uniqid(), Body: mock }).catch((error) => {
                 expect(error).to.be.an('error');
                 done();
             });
