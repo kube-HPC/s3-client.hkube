@@ -45,7 +45,9 @@ describe('s3-client', () => {
             });
         });
         it('should put new object even if bucket not exists', async () => {
-            await S3Client.put({ Bucket: uniqid(), Key: uniqid(), Body: mock });
+            const ss = await S3Client.put({ Bucket: uniqid(), Key: uniqid(), Body: mock });
+            const rr = await S3Client.get(ss);
+            expect(rr).to.deep.equal(mock);
         });
         it('put string as data', async () => {
             const Bucket = 'yellow:' + uniqid();
@@ -90,17 +92,17 @@ describe('s3-client', () => {
         it('put-stream', async () => {
             const bucketName = uniqid();
             const readStream = fs.createReadStream('tests/big-file.txt');
-            await S3Client.putStream({ Bucket: bucketName, Key: uniqid(), Body: readStream });
+            await S3Client.put({ Bucket: bucketName, Key: uniqid(), Body: readStream });
             const readStream2 = fs.createReadStream('tests/big-file.txt');
-            await S3Client.putStream({ Bucket: bucketName, Key: uniqid(), Body: readStream2 });
+            await S3Client.put({ Bucket: bucketName, Key: uniqid(), Body: readStream2 });
         });
         it('override', async () => {
             const bucketName = uniqid();
             const objectId = uniqid();
             const readStream = fs.createReadStream('tests/big-file.txt');
-            await S3Client.putStream({ Bucket: bucketName, Key: objectId, Body: readStream });
+            await S3Client.put({ Bucket: bucketName, Key: objectId, Body: readStream });
             const readStream2 = fs.createReadStream('tests/big-file.txt');
-            await S3Client.putStream({ Bucket: bucketName, Key: objectId, Body: readStream2 });
+            await S3Client.put({ Bucket: bucketName, Key: objectId, Body: readStream2 });
         });
     });
     describe('get', () => {
@@ -145,7 +147,7 @@ describe('s3-client', () => {
             const bucketName = uniqid();
             const key = uniqid();
             const readStream = fs.createReadStream('tests/big-file.txt');
-            await S3Client.putStream({ Bucket: bucketName, Key: key, Body: readStream });
+            await S3Client.put({ Bucket: bucketName, Key: key, Body: readStream });
             const res = await S3Client.getStream({ Bucket: bucketName, Key: key });
             await new Promise((resolve, reject) => {
                 res.pipe(fs.createWriteStream('tests/dest.txt'))
