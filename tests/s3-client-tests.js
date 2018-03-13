@@ -162,13 +162,18 @@ describe('s3-client', () => {
             await S3Client.createBucket({ Bucket });
 
             const streamObject = new stream.Readable();
-            streamObject.push(JSON.stringify(mock));
+            const array = [];
+            for (let i = 0; i < 1000000; i += 1) {
+                array.push(mock);
+            }
+            const bigObject = { arr: array };
+            streamObject.push(JSON.stringify(bigObject));
             streamObject.push(null);
 
             await S3Client.put({ Bucket, Key, Body: streamObject });
             const res = await S3Client.get({ Bucket, Key });
-            expect(res).to.deep.equal(mock);
-        }).timeout(35000);
+            expect(res).to.deep.equal(bigObject);
+        }).timeout(1000000);
     });
     describe('bucket name validations', () => {
         it('Bucket name contains invalid characters :', async () => {
