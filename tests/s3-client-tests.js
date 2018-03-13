@@ -2,6 +2,7 @@ const { expect } = require('chai');
 const S3Client = require('../index');
 const uniqid = require('uuid');
 const fs = require('fs');
+const stream = require('stream');
 
 const mock = {
     mocha: '^5.0.0',
@@ -157,20 +158,16 @@ describe('s3-client', () => {
         });
         it('get-stream', async () => {
             const Bucket = uniqid();
-            const key = uniqid();
+            const Key = uniqid();
             await S3Client.createBucket({ Bucket });
 
-            const readStream = fs.createReadStream('tests/big-file.txt');
-            await S3Client.put({ Bucket, Key: key, Body: readStream });
-            const res = await S3Client.getStream({ Bucket, Key: key });
-            await new Promise((resolve, reject) => {
-                res.pipe(fs.createWriteStream('tests/dest.txt'))
-                    .on('error', (err) => {
-                        reject(err);
-                    }).on('finish', () => {
-                        resolve();
-                    });
-            });
+            const streamObject = new stream.Readable();
+            streamObject.push(JSON.stringify(mock));
+            streamObject.push(null);
+
+            await S3Client.put({ Bucket, Key, Body: streamObject });
+            const res = await S3Client.get({ Bucket, Key });
+            expect(res).to.deep.equal(mock);
         }).timeout(35000);
     });
     describe('bucket name validations', () => {
