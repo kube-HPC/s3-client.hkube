@@ -156,6 +156,23 @@ describe('s3-client', () => {
                 done();
             });
         });
+        it('get-stream file', async () => {
+            const Bucket = uniqid();
+            const Key = uniqid();
+            await S3Client.createBucket({ Bucket });
+ 
+            const readStream = fs.createReadStream('tests/big-file.txt');
+            await S3Client.put({ Bucket, Key, Body: readStream });
+            const res = await S3Client.getStream({ Bucket, Key });
+            await new Promise((resolve, reject) => {
+                res.pipe(fs.createWriteStream('tests/dest.txt'))
+                    .on('error', (err) => {
+                        reject(err);
+                    }).on('finish', () => {
+                        resolve();
+                    });
+            });
+        }).timeout(1000000);
         it('get-stream', async () => {
             const Bucket = uniqid();
             const Key = uniqid();
