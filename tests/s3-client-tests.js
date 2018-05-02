@@ -160,7 +160,7 @@ describe('s3-client', () => {
             const Bucket = uniqid();
             const Key = uniqid();
             await S3Client.createBucket({ Bucket });
- 
+
             const readStream = fs.createReadStream('tests/big-file.txt');
             await S3Client.put({ Bucket, Key, Body: readStream });
             const res = await S3Client.getStream({ Bucket, Key });
@@ -194,30 +194,32 @@ describe('s3-client', () => {
     });
     describe('bucket name validations', () => {
         it('Bucket name contains invalid characters :', async () => {
-            const Bucket = 'tal:' + uniqid() + 'tal:tal';
+            const Bucket = uniqid() + '.tal';
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
         });
-        it('Bucket name is longer than 63 characters', async () => {
+        it('Bucket name is longer than 63 characters', (done) => {
             const Bucket = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:' + uniqid();
-            await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
+            S3Client.createBucket({ Bucket }).catch((error) => {
+                expect(error).to.be.an('error');
+                done();
+            });
         });
         it('Bucket name must start with a letter or number.', async () => {
-            const Bucket = '-dog:' + uniqid();
+            const Bucket = uniqid() + '.-dog';
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
 
-            const bucketName2 = '*dog:' + uniqid();
+            const bucketName2 = uniqid() + '.*dog';
             await S3Client.createBucket({ Bucket: bucketName2 });
             await S3Client.put({ Bucket: bucketName2, Key: uniqid(), Body: mock });
 
-            const bucketName3 = '.dog:' + uniqid();
+            const bucketName3 = uniqid() + '.dog.';
             await S3Client.createBucket({ Bucket: bucketName3 });
             await S3Client.put({ Bucket: bucketName3, Key: uniqid(), Body: mock });
         });
         it('Bucket name must end with a letter or number.', async () => {
-            const Bucket = 'cat:' + uniqid() + '-';
+            const Bucket = uniqid() + '-cat.';
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
 
@@ -225,17 +227,17 @@ describe('s3-client', () => {
             await S3Client.createBucket({ Bucket: bucketName2 });
             await S3Client.put({ Bucket: bucketName2, Key: uniqid(), Body: mock });
 
-            const bucketName3 = 'cat:' + uniqid() + '^';
+            const bucketName3 = uniqid() + '^cat.';
             await S3Client.createBucket({ Bucket: bucketName3 });
             await S3Client.put({ Bucket: bucketName3, Key: uniqid(), Body: mock });
         });
         it('Bucket name cannot contain uppercase letters.', async () => {
-            const Bucket = 'TEST:' + uniqid() + 'TEST-';
+            const Bucket = uniqid() + 'TEST-TEST:';
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
         });
         it('Bucket name cannot contain consecutive periods (.)', async () => {
-            const Bucket = 'Tax..zx:' + uniqid() + '-';
+            const Bucket = uniqid() + '-Tax..zx.';
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
         });
