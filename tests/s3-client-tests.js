@@ -12,7 +12,7 @@ const mock = {
     istanbul: '^1.1.0-alpha.1',
     sinon: '^4.1.3'
 };
-
+const createJobId = () => uniqid() + '.a';
 describe('s3-client', () => {
     before((done) => {
         const options = {
@@ -46,38 +46,38 @@ describe('s3-client', () => {
             });
         });
         it('should throw exception if bucket not exists', (done) => {
-            S3Client.put({ Bucket: uniqid(), Key: uniqid(), Body: mock }).catch((error) => {
+            S3Client.put({ Bucket: createJobId(), Key: createJobId(), Body: mock }).catch((error) => {
                 expect(error).to.be.an('error');
                 done();
             });
         });
         it('put string as data', async () => {
-            const Bucket = 'yellow:' + uniqid();
-            const Key = 'yellow:yellow-algorithms:' + uniqid();
+            const Bucket = 'yellow:' + createJobId();
+            const Key = 'yellow:yellow-algorithms:' + createJobId();
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key, Body: 'str' });
             const result = await S3Client.get({ Bucket, Key });
             expect(result).to.equal('str');
         });
         it('put number as data', async () => {
-            const Bucket = 'green:' + uniqid();
-            const Key = 'green:green-algorithms2:' + uniqid();
+            const Bucket = 'green:' + createJobId();
+            const Key = 'green:green-algorithms2:' + createJobId();
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key, Body: 123456 });
             const result = await S3Client.get({ Bucket, Key });
             expect(result).to.equal(123456);
         });
         it('put object as data', async () => {
-            const Bucket = 'red:' + uniqid();
-            const Key = 'red:red-algorithms2:' + uniqid();
+            const Bucket = 'red:' + createJobId();
+            const Key = 'red:red-algorithms2:' + createJobId();
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key, Body: mock });
             const result = await S3Client.get({ Bucket, Key });
             expect(result).to.deep.equal(mock);
         });
         it('put array as data', async () => {
-            const Bucket = 'black:' + uniqid();
-            const Key = 'black:black-algorithms2:' + uniqid();
+            const Bucket = 'black:' + createJobId();
+            const Key = 'black:black-algorithms2:' + createJobId();
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key, Body: [1, 2, 3] });
             const result = await S3Client.get({ Bucket, Key });
@@ -88,25 +88,25 @@ describe('s3-client', () => {
             expect(result1).to.deep.include(mock, mock);
         });
         it('add multiple objects to the same bucket', async () => {
-            const Bucket = uniqid();
+            const Bucket = createJobId();
             await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
         });
         it('put-stream', async () => {
-            const Bucket = uniqid();
+            const Bucket = createJobId();
             await S3Client.createBucket({ Bucket });
             const readStream = fs.createReadStream('tests/big-file.txt');
-            await S3Client.put({ Bucket, Key: uniqid(), Body: readStream });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: readStream });
             const readStream2 = fs.createReadStream('tests/big-file.txt');
-            await S3Client.put({ Bucket, Key: uniqid(), Body: readStream2 });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: readStream2 });
         });
         it('override', async () => {
-            const Bucket = uniqid();
-            const objectId = uniqid();
+            const Bucket = createJobId();
+            const objectId = createJobId();
             await S3Client.createBucket({ Bucket });
             const readStream = fs.createReadStream('tests/big-file.txt');
             await S3Client.put({ Bucket, Key: objectId, Body: readStream });
@@ -115,12 +115,19 @@ describe('s3-client', () => {
         });
     });
     describe('get', () => {
+        it('should get job result', async () => {
+            const Bucket = createJobId();
+            await S3Client.createBucket({ Bucket });
+            await S3Client.put({ Bucket, Key: 'result.json', Body: { data: 'test1' } });
+            expect(await S3Client.get({ Bucket, Key: 'result.json' })).to.deep.equal({ data: 'test1' });
+        });
+
         it('should get object by bucket & objectId', async () => {
-            const Bucket = uniqid();
-            const objectId1 = uniqid();
-            const objectId2 = uniqid();
-            const objectId3 = uniqid();
-            const objectId4 = uniqid();
+            const Bucket = createJobId();
+            const objectId1 = createJobId();
+            const objectId2 = createJobId();
+            const objectId3 = createJobId();
+            const objectId4 = createJobId();
 
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key: objectId1, Body: { data: 'test1' } });
@@ -134,18 +141,18 @@ describe('s3-client', () => {
             expect(await S3Client.get({ Bucket, Key: objectId4 })).to.deep.equal({ data: 'test4' });
         });
         it('should failed if bucket not exists', (done) => {
-            S3Client.get({ Bucket: uniqid(), Key: uniqid() }).catch((err) => {
+            S3Client.get({ Bucket: createJobId(), Key: createJobId() }).catch((err) => {
                 expect(err.statusCode).to.equal(404);
                 expect(err.name).to.equal('NoSuchBucket');
                 done();
             });
         });
         it('should failed if objectId not exists', (done) => {
-            const Bucket = uniqid();
+            const Bucket = createJobId();
             const resolvingPromise = new Promise((resolve, reject) => {
                 S3Client.createBucket({ Bucket }).then(() => {
-                    S3Client.put({ Bucket, Key: uniqid(), Body: mock }).then(() => {
-                        S3Client.get({ Bucket, Key: uniqid() }).catch(err => reject(err));
+                    S3Client.put({ Bucket, Key: createJobId(), Body: mock }).then(() => {
+                        S3Client.get({ Bucket, Key: createJobId() }).catch(err => reject(err));
                     });
                 });
             });
@@ -157,8 +164,8 @@ describe('s3-client', () => {
             });
         });
         it('get-stream file', async () => {
-            const Bucket = uniqid();
-            const Key = uniqid();
+            const Bucket = createJobId();
+            const Key = createJobId();
             await S3Client.createBucket({ Bucket });
 
             const readStream = fs.createReadStream('tests/big-file.txt');
@@ -174,8 +181,8 @@ describe('s3-client', () => {
             });
         }).timeout(1000000);
         it('get-stream', async () => {
-            const Bucket = uniqid();
-            const Key = uniqid();
+            const Bucket = createJobId();
+            const Key = createJobId();
             await S3Client.createBucket({ Bucket });
 
             const streamObject = new stream.Readable();
@@ -194,52 +201,52 @@ describe('s3-client', () => {
     });
     describe('bucket name validations', () => {
         it('Bucket name contains invalid characters :', async () => {
-            const Bucket = uniqid() + '.tal';
+            const Bucket = createJobId() + '.tal';
             await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
         });
         it('Bucket name is longer than 63 characters', (done) => {
-            const Bucket = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:' + uniqid();
+            const Bucket = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:' + createJobId();
             S3Client.createBucket({ Bucket }).catch((error) => {
                 expect(error).to.be.an('error');
                 done();
             });
         });
         it('Bucket name must start with a letter or number.', async () => {
-            const Bucket = uniqid() + '.-dog';
+            const Bucket = createJobId() + '.-dog';
             await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
 
-            const bucketName2 = uniqid() + '.*dog';
+            const bucketName2 = createJobId() + '.*dog';
             await S3Client.createBucket({ Bucket: bucketName2 });
-            await S3Client.put({ Bucket: bucketName2, Key: uniqid(), Body: mock });
+            await S3Client.put({ Bucket: bucketName2, Key: createJobId(), Body: mock });
 
-            const bucketName3 = uniqid() + '.dog.';
+            const bucketName3 = createJobId() + '.dog.';
             await S3Client.createBucket({ Bucket: bucketName3 });
-            await S3Client.put({ Bucket: bucketName3, Key: uniqid(), Body: mock });
+            await S3Client.put({ Bucket: bucketName3, Key: createJobId(), Body: mock });
         });
         it('Bucket name must end with a letter or number.', async () => {
-            const Bucket = uniqid() + '-cat.';
+            const Bucket = createJobId() + '-cat.';
             await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
 
-            const bucketName2 = 'cat:' + uniqid() + '.';
+            const bucketName2 = 'cat:' + createJobId() + '.';
             await S3Client.createBucket({ Bucket: bucketName2 });
-            await S3Client.put({ Bucket: bucketName2, Key: uniqid(), Body: mock });
+            await S3Client.put({ Bucket: bucketName2, Key: createJobId(), Body: mock });
 
-            const bucketName3 = uniqid() + '^cat.';
+            const bucketName3 = createJobId() + '^cat.';
             await S3Client.createBucket({ Bucket: bucketName3 });
-            await S3Client.put({ Bucket: bucketName3, Key: uniqid(), Body: mock });
+            await S3Client.put({ Bucket: bucketName3, Key: createJobId(), Body: mock });
         });
         it('Bucket name cannot contain uppercase letters.', async () => {
-            const Bucket = uniqid() + 'TEST-TEST:';
+            const Bucket = createJobId() + 'TEST-TEST:';
             await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
         });
         it('Bucket name cannot contain consecutive periods (.)', async () => {
-            const Bucket = uniqid() + '-Tax..zx.';
+            const Bucket = createJobId() + '-Tax..zx.';
             await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: uniqid(), Body: mock });
+            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
         });
     });
 });
