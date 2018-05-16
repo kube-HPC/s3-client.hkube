@@ -12,7 +12,7 @@ const mock = {
     istanbul: '^1.1.0-alpha.1',
     sinon: '^4.1.3'
 };
-const createJobId = () => uniqid() + '.a';
+const createJobId = () => uniqid() + '-ab-cd-ef';
 describe('s3-client', () => {
     before((done) => {
         const options = {
