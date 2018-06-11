@@ -12,7 +12,7 @@ const mock = {
     istanbul: '^1.1.0-alpha.1',
     sinon: '^4.1.3'
 };
-const createJobId = () => uniqid() + '.a';
+const createJobId = () => uniqid() + '-ab-cd-ef';
 describe('s3-client', () => {
     before((done) => {
         const options = {
@@ -52,7 +52,7 @@ describe('s3-client', () => {
             });
         });
         it('put string as data', async () => {
-            const Bucket = 'yellow:' + createJobId();
+            const Bucket = 'yello';
             const Key = 'yellow:yellow-algorithms:' + createJobId();
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key, Body: 'str' });
@@ -60,7 +60,7 @@ describe('s3-client', () => {
             expect(result).to.equal('str');
         });
         it('put number as data', async () => {
-            const Bucket = 'green:' + createJobId();
+            const Bucket = 'green';
             const Key = 'green:green-algorithms2:' + createJobId();
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key, Body: 123456 });
@@ -68,7 +68,7 @@ describe('s3-client', () => {
             expect(result).to.equal(123456);
         });
         it('put object as data', async () => {
-            const Bucket = 'red:' + createJobId();
+            const Bucket = 'red';
             const Key = 'red:red-algorithms2:' + createJobId();
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key, Body: mock });
@@ -76,7 +76,7 @@ describe('s3-client', () => {
             expect(result).to.deep.equal(mock);
         });
         it('put array as data', async () => {
-            const Bucket = 'black:' + createJobId();
+            const Bucket = 'black';
             const Key = 'black:black-algorithms2:' + createJobId();
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key, Body: [1, 2, 3] });
@@ -211,42 +211,6 @@ describe('s3-client', () => {
                 expect(error).to.be.an('error');
                 done();
             });
-        });
-        it('Bucket name must start with a letter or number.', async () => {
-            const Bucket = createJobId() + '.-dog';
-            await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
-
-            const bucketName2 = createJobId() + '.*dog';
-            await S3Client.createBucket({ Bucket: bucketName2 });
-            await S3Client.put({ Bucket: bucketName2, Key: createJobId(), Body: mock });
-
-            const bucketName3 = createJobId() + '.dog.';
-            await S3Client.createBucket({ Bucket: bucketName3 });
-            await S3Client.put({ Bucket: bucketName3, Key: createJobId(), Body: mock });
-        });
-        it('Bucket name must end with a letter or number.', async () => {
-            const Bucket = createJobId() + '-cat.';
-            await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
-
-            const bucketName2 = 'cat:' + createJobId() + '.';
-            await S3Client.createBucket({ Bucket: bucketName2 });
-            await S3Client.put({ Bucket: bucketName2, Key: createJobId(), Body: mock });
-
-            const bucketName3 = createJobId() + '^cat.';
-            await S3Client.createBucket({ Bucket: bucketName3 });
-            await S3Client.put({ Bucket: bucketName3, Key: createJobId(), Body: mock });
-        });
-        it('Bucket name cannot contain uppercase letters.', async () => {
-            const Bucket = createJobId() + 'TEST-TEST:';
-            await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
-        });
-        it('Bucket name cannot contain consecutive periods (.)', async () => {
-            const Bucket = createJobId() + '-Tax..zx.';
-            await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
         });
     });
 });
