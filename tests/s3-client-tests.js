@@ -200,17 +200,85 @@ describe('s3-client', () => {
         }).timeout(1000000);
     });
     describe('bucket name validations', () => {
-        it('Bucket name contains invalid characters :', async () => {
-            const Bucket = createJobId() + '.tal';
-            await S3Client.createBucket({ Bucket });
-            await S3Client.put({ Bucket, Key: createJobId(), Body: mock });
-        });
         it('Bucket name is longer than 63 characters', (done) => {
             const Bucket = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:' + createJobId();
             S3Client.createBucket({ Bucket }).catch((error) => {
                 expect(error).to.be.an('error');
                 done();
             });
+        });
+    });
+    describe('listObjects', () => {
+        it('get 10 keys', async () => {
+            const Bucket = 'test-list-keys';
+            await S3Client.createBucket({ Bucket });
+            const promiseArray = [];
+            for (let i = 0; i < 10; i += 1) {
+                promiseArray.push(S3Client.put({ Bucket, Key: `test1/test-${i}/xxx.json`, Body: { value: 'str' } }));
+            }
+            await Promise.all(promiseArray);
+            const objects = await S3Client.listObjects({ Bucket, Prefix: 'test1' });
+            expect(objects.length).to.equal(10);
+        });
+        it('get 10 objects', async () => {
+            const Bucket = 'test-list-objects';
+            await S3Client.createBucket({ Bucket });
+            const promiseArray = [];
+            for (let i = 0; i < 10; i += 1) {
+                promiseArray.push(S3Client.put({ Bucket, Key: `test1/test/xxx-${i}.json`, Body: { value: 'str' } }));
+            }
+            await Promise.all(promiseArray);
+            const objects = await S3Client.listObjects({ Bucket, Prefix: 'test1/test' });
+            expect(objects.length).to.equal(10);
+        });
+        it('get more than 1000 keys', async () => {
+            const Bucket = 'test-1000-keys';
+            await S3Client.createBucket({ Bucket });
+            const promiseArray = [];
+            for (let i = 0; i < 1500; i += 1) {
+                promiseArray.push(S3Client.put({ Bucket, Key: `test1/test-${i}/xxx.json`, Body: { value: 'str' } }));
+            }
+            await Promise.all(promiseArray);
+            const objects = await S3Client.listObjects({ Bucket, Prefix: 'test1' });
+            expect(objects.length).to.equal(1500);
+        }).timeout(10000);
+        it('get more than 1000 objects', async () => {
+            const Bucket = 'test-1000-objects';
+            await S3Client.createBucket({ Bucket });
+            const promiseArray = [];
+            for (let i = 0; i < 1500; i += 1) {
+                promiseArray.push(S3Client.put({ Bucket, Key: `test1/test/xxx-${i}.json`, Body: { value: 'str' } }));
+            }
+            await Promise.all(promiseArray);
+            const objects = await S3Client.listObjects({ Bucket, Prefix: 'test1/test' });
+            expect(objects.length).to.equal(1500);
+        }).timeout(10000);
+    });
+    describe('delete', () => {
+        it('get 10 objects', async () => {
+            const Bucket = 'delete-objects';
+            await S3Client.createBucket({ Bucket });
+            const promiseArray = [];
+            for (let i = 0; i < 10; i += 1) {
+                promiseArray.push(S3Client.put({ Bucket, Key: `test1/test/xxx-${i}.json`, Body: { value: 'str' } }));
+            }
+            await Promise.all(promiseArray);
+            const objectsToDelete = await S3Client.listObjects({ Bucket, Prefix: 'test1/test' });
+            const res = await S3Client.deleteObjects({ Bucket, Delete: { Objects: objectsToDelete } });
+            expect(res.Deleted.length).to.equal(10);
+        });
+        it('get 10 keys', async () => {
+            const Bucket = 'delete-keys';
+            await S3Client.createBucket({ Bucket });
+            const promiseArray = [];
+            for (let i = 0; i < 10; i += 1) {
+                promiseArray.push(S3Client.put({ Bucket, Key: `test1/test-${i}/xxx.json`, Body: { value: 'str' } }));
+            }
+            await Promise.all(promiseArray);
+
+            const objectsToDelete = await S3Client.listObjects({ Bucket, Prefix: 'test1' });
+            const res = await S3Client.deleteObjects({ Bucket, Delete: { Objects: objectsToDelete } });
+            expect(res.Deleted.length).to.equal(10);
         });
     });
 });
