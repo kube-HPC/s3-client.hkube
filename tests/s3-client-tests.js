@@ -19,9 +19,6 @@ describe('s3-client', () => {
             accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'AKIAIOSFODNN7EXAMPLE',
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
             endpoint: process.env.AWS_ENDPOINT || 'http://127.0.0.1:9000'
-            // accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'agambstorage',
-            // secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '234eqndbpuCkGtH85KSyK/xAv3xuqdOpM3fKOLYlrSerpdKoG1FYy3kh6ArceL+yDwTvQOgs47xYO/ktnNzEeg==',
-            // endpoint: process.env.AWS_ENDPOINT || 'http://10.32.10.24:9000'
         };
         S3Client.init(options);
         done();
