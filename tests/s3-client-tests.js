@@ -204,6 +204,22 @@ describe('s3-client', () => {
                 done();
             });
         });
+        it('create bucket with LocationConstraint', async () => {
+            const Bucket = 'sss' + createJobId();
+            await S3Client.createBucket({
+                Bucket,
+                CreateBucketConfiguration: { LocationConstraint: 'some-region' }
+            });
+            expect(await S3Client._isBucketExists({ Bucket })).to.equal(true);
+        });
+        it('create bucket with empty string LocationConstraint', async () => {
+            const Bucket = 'sss' + createJobId();
+            await S3Client.createBucket({
+                Bucket,
+                CreateBucketConfiguration: { LocationConstraint: '' }
+            });
+            expect(await S3Client._isBucketExists({ Bucket })).to.equal(true);
+        });
     });
     describe('listObjects', () => {
         it('get 10 keys', async () => {
