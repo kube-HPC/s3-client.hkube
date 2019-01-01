@@ -208,7 +208,7 @@ describe('s3-client', () => {
             const Bucket = 'sss' + createJobId();
             await S3Client.createBucket({
                 Bucket,
-                CreateBucketConfiguration: { LocationConstraint: 'some-region' }
+                CreateBucketConfiguration: { LocationConstraint: 'eu-west-1' }
             });
             expect(await S3Client._isBucketExists({ Bucket })).to.equal(true);
         });
