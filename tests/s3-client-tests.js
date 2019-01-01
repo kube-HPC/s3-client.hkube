@@ -101,6 +101,12 @@ describe('s3-client', () => {
             const readStream2 = fs.createReadStream('tests/big-file.txt');
             await S3Client.put({ Bucket, Key: createJobId(), Body: readStream2 });
         });
+        it('put-buffer', async () => {
+            const Bucket = createJobId();
+            await S3Client.createBucket({ Bucket });
+            const buf = Buffer.from('hello buffer');
+            await S3Client.put({ Bucket, Key: createJobId(), Body: buf });
+        });
         it('override', async () => {
             const Bucket = createJobId();
             const objectId = createJobId();
@@ -177,6 +183,15 @@ describe('s3-client', () => {
                     });
             });
         }).timeout(1000000);
+        it('get-buffer', async () => {
+            const Bucket = createJobId();
+            const Key = createJobId();
+
+            await S3Client.createBucket({ Bucket });
+            const buf = Buffer.from('hello buffer');
+            await S3Client.put({ Bucket, Key, Body: buf });
+            const res = await S3Client.getBuffer({ Bucket, Key });
+        });
         it('get-stream', async () => {
             const Bucket = createJobId();
             const Key = createJobId();
