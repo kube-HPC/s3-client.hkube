@@ -281,7 +281,7 @@ describe('s3-client', () => {
             const objects = await S3Client.listObjects({ Bucket, Prefix: 'test1/test' });
             expect(objects.length).to.equal(1500);
         }).timeout(10000);
-        it.only('list by delimiter', async () => {
+        it('list by delimiter', async () => {
             const Bucket = uniqid();
             await S3Client.createBucket({ Bucket });
 
