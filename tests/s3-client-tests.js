@@ -292,8 +292,9 @@ describe('s3-client', () => {
             }
             await Promise.all(promiseArray);
             const objectsToDelete = await S3Client.listObjects({ Bucket, Prefix: 'test1/test' });
-            const res = await S3Client.deleteObjects({ Bucket, Delete: { Objects: objectsToDelete } });
-            expect(res.Deleted.length).to.equal(10);
+            await S3Client.deleteObjects({ Bucket, Delete: { Objects: objectsToDelete } });
+            const objectsToDeleteAfter = await S3Client.listObjects({ Bucket, Prefix: 'test1/test' });
+            expect(objectsToDeleteAfter.length).to.equal(0);
         });
         it('get 10 keys', async () => {
             const Bucket = 'delete-keys';
@@ -305,8 +306,9 @@ describe('s3-client', () => {
             await Promise.all(promiseArray);
 
             const objectsToDelete = await S3Client.listObjects({ Bucket, Prefix: 'test1' });
-            const res = await S3Client.deleteObjects({ Bucket, Delete: { Objects: objectsToDelete } });
-            expect(res.Deleted.length).to.equal(10);
+            await S3Client.deleteObjects({ Bucket, Delete: { Objects: objectsToDelete } });
+            const objectsToDeleteAfter = await S3Client.listObjects({ Bucket, Prefix: 'test1' });
+            expect(objectsToDeleteAfter.length).to.equal(0);
         });
     });
 });
