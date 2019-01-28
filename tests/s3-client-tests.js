@@ -190,7 +190,7 @@ describe('s3-client', () => {
             await S3Client.createBucket({ Bucket });
             const buf = Buffer.from('hello buffer');
             await S3Client.put({ Bucket, Key, Body: buf });
-            const res = await S3Client.getBuffer({ Bucket, Key });
+            await S3Client.getBuffer({ Bucket, Key });
         });
         it('get-stream', async () => {
             const Bucket = createJobId();
@@ -281,6 +281,20 @@ describe('s3-client', () => {
             const objects = await S3Client.listObjects({ Bucket, Prefix: 'test1/test' });
             expect(objects.length).to.equal(1500);
         }).timeout(10000);
+        it.only('list by delimiter', async () => {
+            const Bucket = uniqid();
+            await S3Client.createBucket({ Bucket });
+
+            await S3Client.put({ Bucket, Key: '2019-01-27/test1', Body: { data: 'test3' } });
+            await S3Client.put({ Bucket, Key: '2019-01-26/test2', Body: { data: 'test3' } });
+            await S3Client.put({ Bucket, Key: '2019-01-25/test1', Body: { data: 'test3' } });
+
+            const prefixes = await S3Client.listByDelimiter({
+                Bucket,
+                Delimiter: '/'
+            });
+            expect(prefixes.length).to.equal(3);
+        });
     });
     describe('delete', () => {
         it('get 10 objects', async () => {
