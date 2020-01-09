@@ -56,7 +56,7 @@ describe('s3-client', () => {
             expect(result).to.equal('str');
         });
         it('put string as data binary', async () => {
-            S3Client.init({...options, binary: true});
+            S3Client.init({ ...options, binary: true });
             const Bucket = 'yello';
             const Key = 'yellow:yellow-algorithms:' + createJobId();
             await S3Client.createBucket({ Bucket });
@@ -73,7 +73,7 @@ describe('s3-client', () => {
             expect(result).to.equal(123456);
         });
         it('put number as data binary', async () => {
-            S3Client.init({...options, binary: true});
+            S3Client.init({ ...options, binary: true });
             const Bucket = 'green';
             const Key = 'green:green-algorithms2:' + createJobId();
             await S3Client.createBucket({ Bucket });
@@ -90,13 +90,23 @@ describe('s3-client', () => {
             expect(result).to.deep.equal(mock);
         });
         it('put object as data binary', async () => {
-            S3Client.init({...options, binary: true});
+            S3Client.init({ ...options, binary: true });
             const Bucket = 'red';
             const Key = 'red:red-algorithms2:' + createJobId();
             await S3Client.createBucket({ Bucket });
             await S3Client.put({ Bucket, Key, Body: mock });
             const result = await S3Client.get({ Bucket, Key });
             expect(result).to.deep.equal(mock);
+        });
+        it('put object 2 as data binary', async () => {
+            S3Client.init({ ...options, binary: true });
+            const Bucket = 'red';
+            const Key = 'red:red-algorithms2:' + createJobId();
+            await S3Client.createBucket({ Bucket });
+            const data = { command: 'foo', data: Buffer.alloc(10, 0x33) };
+            await S3Client.put({ Bucket, Key, Body: data });
+            const result = await S3Client.get({ Bucket, Key });
+            expect(result).to.deep.equal(data);
         });
         it('put array as data', async () => {
             const Bucket = 'black';
@@ -111,7 +121,7 @@ describe('s3-client', () => {
             expect(result1).to.deep.include(mock, mock);
         });
         it('put array as data binary', async () => {
-            S3Client.init({...options, binary: true});
+            S3Client.init({ ...options, binary: true });
             const Bucket = 'black';
             const Key = 'black:black-algorithms2:' + createJobId();
             await S3Client.createBucket({ Bucket });
@@ -141,13 +151,19 @@ describe('s3-client', () => {
             await S3Client.put({ Bucket, Key: createJobId(), Body: readStream2 });
         });
         it('put-stream binary', async () => {
-            S3Client.init({...options, binary: true});
+            S3Client.init({ ...options, binary: true });
             const Bucket = createJobId();
             await S3Client.createBucket({ Bucket });
             const readStream = fs.createReadStream('tests/big-file.txt');
             await S3Client.put({ Bucket, Key: createJobId(), Body: readStream });
             const readStream2 = fs.createReadStream('tests/big-file.txt');
             await S3Client.put({ Bucket, Key: createJobId(), Body: readStream2 });
+        });
+        it('put-buffer', async () => {
+            const Bucket = createJobId();
+            await S3Client.createBucket({ Bucket });
+            const buf = Buffer.from('hello buffer');
+            await S3Client.put({ Bucket, Key: createJobId(), Body: buf });
         });
         it('override', async () => {
             const Bucket = createJobId();
@@ -225,6 +241,15 @@ describe('s3-client', () => {
                     });
             });
         }).timeout(1000000);
+        it('get-buffer', async () => {
+            const Bucket = createJobId();
+            const Key = createJobId();
+
+            await S3Client.createBucket({ Bucket });
+            const buf = Buffer.from('hello buffer');
+            await S3Client.put({ Bucket, Key, Body: buf });
+            await S3Client.getBuffer({ Bucket, Key });
+        });
         it('get-stream', async () => {
             const Bucket = createJobId();
             const Key = createJobId();
@@ -256,7 +281,7 @@ describe('s3-client', () => {
             const Bucket = 'sss' + createJobId();
             await S3Client.createBucket({
                 Bucket,
-                CreateBucketConfiguration: { LocationConstraint: 'some-region' }
+                CreateBucketConfiguration: { LocationConstraint: 'eu-west-1' }
             });
             expect(await S3Client._isBucketExists({ Bucket })).to.equal(true);
         });
@@ -314,6 +339,20 @@ describe('s3-client', () => {
             const objects = await S3Client.listObjects({ Bucket, Prefix: 'test1/test' });
             expect(objects.length).to.equal(1500);
         }).timeout(10000);
+        it('list by delimiter', async () => {
+            const Bucket = uniqid();
+            await S3Client.createBucket({ Bucket });
+
+            await S3Client.put({ Bucket, Key: '2019-01-27/test1', Body: { data: 'test3' } });
+            await S3Client.put({ Bucket, Key: '2019-01-26/test2', Body: { data: 'test3' } });
+            await S3Client.put({ Bucket, Key: '2019-01-25/test1', Body: { data: 'test3' } });
+
+            const prefixes = await S3Client.listByDelimiter({
+                Bucket,
+                Delimiter: '/'
+            });
+            expect(prefixes.length).to.equal(3);
+        });
     });
     describe('delete', () => {
         it('get 10 objects', async () => {
@@ -325,8 +364,9 @@ describe('s3-client', () => {
             }
             await Promise.all(promiseArray);
             const objectsToDelete = await S3Client.listObjects({ Bucket, Prefix: 'test1/test' });
-            const res = await S3Client.deleteObjects({ Bucket, Delete: { Objects: objectsToDelete } });
-            expect(res.Deleted.length).to.equal(10);
+            await S3Client.deleteObjects({ Bucket, Delete: { Objects: objectsToDelete } });
+            const objectsToDeleteAfter = await S3Client.listObjects({ Bucket, Prefix: 'test1/test' });
+            expect(objectsToDeleteAfter.length).to.equal(0);
         });
         it('get 10 keys', async () => {
             const Bucket = 'delete-keys';
@@ -338,8 +378,9 @@ describe('s3-client', () => {
             await Promise.all(promiseArray);
 
             const objectsToDelete = await S3Client.listObjects({ Bucket, Prefix: 'test1' });
-            const res = await S3Client.deleteObjects({ Bucket, Delete: { Objects: objectsToDelete } });
-            expect(res.Deleted.length).to.equal(10);
+            await S3Client.deleteObjects({ Bucket, Delete: { Objects: objectsToDelete } });
+            const objectsToDeleteAfter = await S3Client.listObjects({ Bucket, Prefix: 'test1' });
+            expect(objectsToDeleteAfter.length).to.equal(0);
         });
     });
 });
