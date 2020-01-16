@@ -1,6 +1,6 @@
 {
   "name": "@hkube/s3-client",
-  "version": "1.0.30",
+  "version": "1.0.31",
   "description": "s3 client",
   "main": "index.js",
   "scripts": {
