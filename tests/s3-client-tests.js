@@ -64,6 +64,15 @@ describe('s3-client', () => {
             const result = await S3Client.get({ Bucket, Key });
             expect(result).to.equal('str');
         });
+        it('put null as data binary', async () => {
+            S3Client.init({ ...options, binary: true });
+            const Bucket = 'yello';
+            const Key = 'yellow:yellow-algorithms:' + createJobId();
+            await S3Client.createBucket({ Bucket });
+            await S3Client.put({ Bucket, Key, Body: null });
+            const result = await S3Client.get({ Bucket, Key });
+            expect(result).to.not.exist;
+        });        
         it('put number as data', async () => {
             const Bucket = 'green';
             const Key = 'green:green-algorithms2:' + createJobId();
