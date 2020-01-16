@@ -108,6 +108,16 @@ describe('s3-client', () => {
             const result = await S3Client.get({ Bucket, Key });
             expect(result).to.deep.equal(data);
         });
+        it('put large object as data binary', async () => {
+            S3Client.init({ ...options, binary: true });
+            const Bucket = 'red';
+            const Key = 'red:red-algorithms2:' + createJobId();
+            await S3Client.createBucket({ Bucket });
+            const data = { command: 'foo', data: Buffer.alloc(50 * 1024 * 1024, 0x33), another: 'key' };
+            await S3Client.put({ Bucket, Key, Body: data });
+            const result = await S3Client.get({ Bucket, Key });
+            expect(result).to.deep.equal(data);
+        });
         it('put array as data', async () => {
             const Bucket = 'black';
             const Key = 'black:black-algorithms2:' + createJobId();
