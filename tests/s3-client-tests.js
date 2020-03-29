@@ -3,6 +3,8 @@ const S3Client = require('../index');
 const uniqid = require('uuid');
 const fs = require('fs');
 const stream = require('stream');
+const { Encoding } = require('@hkube/encoding');
+const encoding = new Encoding({ type: 'json' });
 
 const mock = {
     mocha: '^5.0.0',
@@ -19,9 +21,29 @@ const options = {
     endpoint: process.env.AWS_ENDPOINT || 'http://127.0.0.1:9000'
 };
 const client = new S3Client();
+
 describe('s3-client', () => {
-    beforeEach(() => {
+    before(() => {
         client.init(options);
+
+        const wrapperGet = (fn) => {
+            const wrapper = async (args) => {
+                const result = await fn(args);
+                return encoding.decode(result);
+            };
+            return wrapper;
+        };
+
+        const wrapperPut = (fn) => {
+            const wrapper = (args) => {
+                const Body = (!args.ignoreEncode && encoding.encode(args.Body)) || args.Body;
+                return fn({ ...args, Body });
+            };
+            return wrapper;
+        };
+
+        client.put = wrapperPut(client.put.bind(client));
+        client.get = wrapperGet(client.get.bind(client));
     });
     describe('put', () => {
         it('should throw error on invalid bucket name (empty)', (done) => {
@@ -56,34 +78,7 @@ describe('s3-client', () => {
             const result = await client.get({ Bucket, Key });
             expect(result).to.equal('str');
         });
-        it('put string as data binary', async () => {
-            client.init({ ...options, binary: true });
-            const Bucket = 'yello';
-            const Key = 'yellow:yellow-algorithms:' + createJobId();
-            await client.createBucket({ Bucket });
-            await client.put({ Bucket, Key, Body: 'str' });
-            const result = await client.get({ Bucket, Key });
-            expect(result).to.equal('str');
-        });
-        it('put null as data binary', async () => {
-            client.init({ ...options, binary: true });
-            const Bucket = 'yello';
-            const Key = 'yellow:yellow-algorithms:' + createJobId();
-            await client.createBucket({ Bucket });
-            await client.put({ Bucket, Key, Body: null });
-            const result = await client.get({ Bucket, Key });
-            expect(result).to.not.exist;
-        });
         it('put number as data', async () => {
-            const Bucket = 'green';
-            const Key = 'green:green-algorithms2:' + createJobId();
-            await client.createBucket({ Bucket });
-            await client.put({ Bucket, Key, Body: 123456 });
-            const result = await client.get({ Bucket, Key });
-            expect(result).to.equal(123456);
-        });
-        it('put number as data binary', async () => {
-            client.init({ ...options, binary: true });
             const Bucket = 'green';
             const Key = 'green:green-algorithms2:' + createJobId();
             await client.createBucket({ Bucket });
@@ -99,49 +94,7 @@ describe('s3-client', () => {
             const result = await client.get({ Bucket, Key });
             expect(result).to.deep.equal(mock);
         });
-        it('put object as data binary', async () => {
-            client.init({ ...options, binary: true });
-            const Bucket = 'red';
-            const Key = 'red:red-algorithms2:' + createJobId();
-            await client.createBucket({ Bucket });
-            await client.put({ Bucket, Key, Body: mock });
-            const result = await client.get({ Bucket, Key });
-            expect(result).to.deep.equal(mock);
-        });
-        it('put object 2 as data binary', async () => {
-            client.init({ ...options, binary: true });
-            const Bucket = 'red';
-            const Key = 'red:red-algorithms2:' + createJobId();
-            await client.createBucket({ Bucket });
-            const data = { command: 'foo', data: Buffer.alloc(10, 0x33) };
-            await client.put({ Bucket, Key, Body: data });
-            const result = await client.get({ Bucket, Key });
-            expect(result).to.deep.equal(data);
-        });
-        it('put large object as data binary', async () => {
-            client.init({ ...options, binary: true });
-            const Bucket = 'red';
-            const Key = 'red:red-algorithms2:' + createJobId();
-            await client.createBucket({ Bucket });
-            const data = { command: 'foo', data: Buffer.alloc(50 * 1024 * 1024, 0x33), another: 'key' };
-            await client.put({ Bucket, Key, Body: data });
-            const result = await client.get({ Bucket, Key });
-            expect(result).to.deep.equal(data);
-        });
         it('put array as data', async () => {
-            const Bucket = 'black';
-            const Key = 'black:black-algorithms2:' + createJobId();
-            await client.createBucket({ Bucket });
-            await client.put({ Bucket, Key, Body: [1, 2, 3] });
-            const result = await client.get({ Bucket, Key });
-            expect(result).to.include(1, 2, 3);
-
-            await client.put({ Bucket, Key, Body: [mock, mock] });
-            const result1 = await client.get({ Bucket, Key });
-            expect(result1).to.deep.include(mock, mock);
-        });
-        it('put array as data binary', async () => {
-            client.init({ ...options, binary: true });
             const Bucket = 'black';
             const Key = 'black:black-algorithms2:' + createJobId();
             await client.createBucket({ Bucket });
@@ -163,15 +116,6 @@ describe('s3-client', () => {
             await client.put({ Bucket, Key: createJobId(), Body: mock });
         });
         it('put-stream', async () => {
-            const Bucket = createJobId();
-            await client.createBucket({ Bucket });
-            const readStream = fs.createReadStream('tests/big-file.txt');
-            await client.put({ Bucket, Key: createJobId(), Body: readStream });
-            const readStream2 = fs.createReadStream('tests/big-file.txt');
-            await client.put({ Bucket, Key: createJobId(), Body: readStream2 });
-        });
-        it('put-stream binary', async () => {
-            client.init({ ...options, binary: true });
             const Bucket = createJobId();
             await client.createBucket({ Bucket });
             const readStream = fs.createReadStream('tests/big-file.txt');
@@ -284,7 +228,7 @@ describe('s3-client', () => {
             streamObject.push(JSON.stringify(bigObject));
             streamObject.push(null);
 
-            await client.put({ Bucket, Key, Body: streamObject });
+            await client.put({ Bucket, Key, Body: streamObject, ignoreEncode: true });
             const res = await client.get({ Bucket, Key });
             expect(res).to.deep.equal(bigObject);
         }).timeout(1000000);
