@@ -78,6 +78,14 @@ describe('s3-client', () => {
             const result = await client.get({ Bucket, Key });
             expect(result).to.equal('str');
         });
+        it('get metadata', async () => {
+            const Bucket = 'yello';
+            const Key = 'yellow:yellow-algorithms:' + createJobId();
+            await client.createBucket({ Bucket });
+            await client.put({ Bucket, Key, Body: 'str' });
+            const result = await client.getMetadata({ Bucket, Key });
+            expect(result.size).to.equal(5);
+        });
         it('put number as data', async () => {
             const Bucket = 'green';
             const Key = 'green:green-algorithms2:' + createJobId();
