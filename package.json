@@ -14,7 +14,7 @@
   "author": "tal",
   "license": "ISC",
   "dependencies": {
-    "ajv": "^6.6.2",
+    "ajv": "^6.12.6",
     "bson": "^4.0.3",
     "aws-sdk": "^2.382.0"
   },
